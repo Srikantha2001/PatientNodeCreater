@@ -296,7 +296,7 @@ peer:
         # Minimally, set your organization's TLS CA root certificate so that the peer can receive join channel requests.
         clientRootCAs:
             files:
-              - tls/ca.crt
+              - /etc/hyperledger/fabric/tls/ca.crt
         # Private key used for TLS when making client connections.
         # If not set, peer.tls.key.file will be used instead
         clientKey:
