@@ -1,0 +1,8 @@
+PeerOrgs:
+- Domain: patorg.patient.com
+  EnableNodeOUs: true
+  Name: patorg
+  Template:
+    Count: 2
+  Users:
+    Count: 1
