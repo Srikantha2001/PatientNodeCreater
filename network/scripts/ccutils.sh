@@ -5,7 +5,7 @@
 function installChaincode() {
   ORG=$1
   PEER=$2
-  setGlobals${PEER} $ORG
+  setGlobals0 $ORG
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   if test $? -ne 0; then
@@ -22,7 +22,7 @@ function installChaincode() {
 function queryInstalled() {
   ORG=$1
   PEER=$2
-  setGlobals${PEER} $ORG
+  setGlobals0 $ORG
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   res=$?

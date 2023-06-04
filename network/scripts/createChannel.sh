@@ -121,12 +121,13 @@ infoln "Joining patient peer${PEER_PATIENT_NUMBER}  to the channel..."
 joinChannel "patorg" ${PEER_PATIENT_NUMBER}
 
 # infoln "Joining doctor peer to the channel ..."
-joinChannelDoctor "docorg" 0
+# joinChannelDoctor "docorg" 0
 
-setGlobals0 "patorg"
+setGlobals0 "patorg" 
 
 ## Set the anchor peers for each org in the channel
-# infoln "Setting anchor peer for patorg..."
-# setAnchorPeer "patorg" 
+infoln "Setting anchor peer for patorg..."
+setAnchorPeer "patorg"
+
 
 successln "Channel '$CHANNEL_NAME' joined"

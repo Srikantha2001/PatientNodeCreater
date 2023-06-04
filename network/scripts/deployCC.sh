@@ -2,7 +2,7 @@
 
 source scripts/utils.sh
 
-CHANNEL_NAME=${1:-"patdoc-channel"}
+CHANNEL_NAME=${1:-"patdoc-channel${PEER_PATIENT_NUMBER}"}
 CC_NAME=${2}
 CC_SRC_PATH=${3}
 CC_SRC_LANGUAGE=${4}
@@ -13,7 +13,7 @@ CC_END_POLICY=${8:-"NA"}
 CC_COLL_CONFIG=${9:-"NA"}
 DELAY=${10:-"3"}
 MAX_RETRY=${11:-"5"}
-VERBOSE=${12:-"false"}
+VERBOSE=${12:-"true"}
 
 println "executing with the following"
 println "- CHANNEL_NAME: ${C_GREEN}${CHANNEL_NAME}${C_RESET}"
@@ -56,6 +56,7 @@ if [ "$CC_SRC_LANGUAGE" = "go" ]; then
 
   infoln "Vendoring Go dependencies at $CC_SRC_PATH"
   pushd $CC_SRC_PATH
+  go mod tidy
   GO111MODULE=on go mod vendor
   popd
   successln "Finished vendoring Go dependencies"
@@ -141,59 +142,56 @@ checkPrereqs
 packageChaincode
 
 ## Install chaincode on peer${PEER_PATIENT_NUMBER}.patorg and peer${PEER_PATIENT_NUMBER}.patorg2
-infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
-installChaincode "patorg" 0
 
 infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
-installChaincode "patorg" 1
+installChaincode "patorg" ${PEER_PATIENT_NUMBER}
 
-infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
-installChaincode "patorg" 2
+# infoln "Installing chaincode on peer0.docorg..."
+# installChaincode "docorg" 0
 
-infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
-installChaincode "patorg" 3
+# infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
+# installChaincode "patorg" 2
+
+# infoln "Installing chaincode on peer${PEER_PATIENT_NUMBER}.patorg..."
+# installChaincode "patorg" 3
 
 ## query whether the chaincode is installed
-queryInstalled "patorg" 0
-queryInstalled "patorg" 1
-queryInstalled "patorg" 2
-queryInstalled "patorg" 3
+# queryInstalled "patorg" 0
+# queryInstalled "patorg" 1
+# queryInstalled "patorg" 2
+# queryInstalled "patorg" 3
 
 ## approve the definition for patorg
-approveForMyOrg "patorg" 0
-# approveForMyOrg "patorg" 1
-# approveForMyOrg "patorg" 2
-# approveForMyOrg "patorg" 3
+# approveForMyOrg "patorg" 0
+
 
 ## check whether the chaincode definition is ready to be committed
 ## expect patorg to have approved and patorg2 not to
-checkCommitReadiness "patorg" 0 "\"PatOrgMSP\": true" 
-checkCommitReadiness "patorg" 1 "\"PatOrgMSP\": true" 
-checkCommitReadiness "patorg" 2 "\"PatOrgMSP\": true" 
-checkCommitReadiness "patorg" 3 "\"PatOrgMSP\": true" 
+# checkCommitReadiness "patorg" 0 "\"PatOrgMSP\": true" 
+# checkCommitReadiness "patorg" 1 "\"PatOrgMSP\": true" 
+# checkCommitReadiness "patorg" 2 "\"PatOrgMSP\": true" 
+# checkCommitReadiness "patorg" 3 "\"PatOrgMSP\": true" 
 
 
 ## now that we know for sure both orgs have approved, commit the definition
-commitChaincodeDefinition 0 "patorg" 
-# commitChaincodeDefinition 1 "patorg" 
-# commitChaincodeDefinition 2 "patorg" 
-# commitChaincodeDefinition 3 "patorg" 
+# commitChaincodeDefinition 0 "patorg" 
+
 
 ## query on both orgs to see that the definition committed successfully
-queryCommitted "patorg" 0
-queryCommitted "patorg" 1
-queryCommitted "patorg" 2
-queryCommitted "patorg" 3
+# queryCommitted "patorg" 0
+# queryCommitted "patorg" 1
+# queryCommitted "patorg" 2
+# queryCommitted "patorg" 3
 
 ## Invoke the chaincode - this does require that the chaincode have the 'initLedger'
 ## method defined
-if [ "$CC_INIT_FCN" = "NA" ]; then
-  infoln "Chaincode initialization is not required"
-else
-  chaincodeInvokeInit "patorg" 0
-  chaincodeInvokeInit "patorg" 1
-  chaincodeInvokeInit "patorg" 2
-  chaincodeInvokeInit "patorg" 3
-fi
+# if [ "$CC_INIT_FCN" = "NA" ]; then
+#   infoln "Chaincode initialization is not required"
+# else
+#   chaincodeInvokeInit "patorg" 0
+#   chaincodeInvokeInit "patorg" 1
+#   chaincodeInvokeInit "patorg" 2
+#   chaincodeInvokeInit "patorg" 3
+# fi
 
 exit 0

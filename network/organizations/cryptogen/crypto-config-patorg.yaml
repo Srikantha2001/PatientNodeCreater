@@ -3,6 +3,6 @@ PeerOrgs:
   EnableNodeOUs: true
   Name: patorg
   Template:
-    Count: 2
+    Count: 1
   Users:
     Count: 1

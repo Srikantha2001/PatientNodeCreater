@@ -4,12 +4,10 @@ import subprocess
 import shlex
 import yaml
 
-
 # Loading of Yaml files
 
 with open('./compose/compose-test-net-2.yaml', 'r') as file:
     compose_data = yaml.safe_load(file)
-
 
 with open('./organizations/cryptogen/crypto-config-patorg.yaml', 'r') as file:
     config_data = yaml.safe_load(file)
@@ -58,6 +56,8 @@ newpeer = {
         'CORE_METRICS_PROVIDER=prometheus',
         'CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer'+str(env_dict['peer_number'])+'patorg"}',
         'CORE_CHAINCODE_EXECUTETIMEOUT=300s', 
+        'CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock',
+        'CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test',
     ],
     'image': 'hyperledger/fabric-peer:latest',
     'labels': {
@@ -71,6 +71,8 @@ newpeer = {
     'volumes': [
         '../organizations/peerOrganizations/patorg.patient.com/peers/peer'+str(env_dict['peer_number'])+'.patorg.patient.com:/etc/hyperledger/fabric',
         'peer'+str(env_dict['peer_number'])+'.patorg.patient.com:/var/hyperledger/production',
+        './docker/peercfg:/etc/hyperledger/peercfg',
+        '${DOCKER_SOCK}:/host/var/run/docker.sock',
     ],
     'working_dir': '/root',
 }
@@ -100,15 +102,18 @@ modifiedCLI ={
     'labels': {
         'service': 'hyperledger-fabric'
     },
+    'depends_on' :[
+        'peer0.patorg.patient.com'
+    ],
     'networks': ['test'],
     'stdin_open': True,
     'tty': True,
     'volumes': [
-        '../organizations:/opt/gopath/src/github.com/hyperledger/fabric/peer/organizations',
-        '../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/',
+        '../organizations:/etc/hyperledger/fabric/peer/organizations',
+        '../scripts:/etc/hyperledger/fabric/peer/scripts/',
         './docker/peercfg:/etc/hyperledger/peercfg'
     ],
-    'working_dir': '/opt/gopath/src/github.com/hyperledger/fabric/peer'
+    'working_dir': '/etc/hyperledger/fabric/peer'
 }
 
 
@@ -126,6 +131,8 @@ with open('./compose/compose-test-net-2.yaml', 'w') as file:
 
 # subprocess.run(shlex.split('./network.sh up -ca'))
 subprocess.run(shlex.split('./network.sh createChannel -ca -verbose'))
+
+subprocess.run(shlex.split('./network.sh deployCC -ccn patdoccc -ccp ../Chaincode-go -ccl go -verbose'))
 
 env_dict['peer_number']+=1
 env_dict['peer_port']+=2

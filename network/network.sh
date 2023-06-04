@@ -410,6 +410,9 @@ elif [ "$MODE" == "createChannel" ]; then
 elif [ "$MODE" == "down" ]; then
   infoln "Stopping network"
   networkDown
+elif [ "$MODE" == "deployCC" ]; then
+  infoln "deploying chaincode on channel '${CHANNEL_NAME}'"
+  deployCC
 else
   printHelp
   exit 1

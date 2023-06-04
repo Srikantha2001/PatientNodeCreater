@@ -19,7 +19,7 @@ createAnchorPeerUpdate() {
 
   if [ $ORG = "patorg" ]; then
     HOST="peer${PEER_PATIENT_NUMBER}.patorg.patient.com"
-    PORT=${PEER_PATIENT_PORT}
+    PORT=20000  # ${PEER_PATIENT_PORT}
   else
     errorln "${ORG} unknown"
   fi
