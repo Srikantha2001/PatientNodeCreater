@@ -50,6 +50,21 @@ createChannel() {
 	done
 	cat log.txt
 	verifyResult $res "Channel creation failed"
+
+	setGlobals0 "docorg"
+	rc=1
+	COUNTER=1
+	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
+		sleep $DELAY
+		set -x
+		osnadmin channel join --channelID $CHANNEL_NAME --config-block ./channel-artifacts/${CHANNEL_NAME}.block -o localhost:7053 --ca-file "$DOC_ORDERER_CA" --client-cert "$DOC_ORDERER_ADMIN_TLS_SIGN_CERT" --client-key "$DOC_ORDERER_ADMIN_TLS_PRIVATE_KEY" >&log.txt
+		res=$?
+		{ set +x; } 2>/dev/null
+		let rc=$res
+		COUNTER=$(expr $COUNTER + 1)
+	done
+	cat log.txt
+	verifyResult $res "Channel creation failed"
 }
 
 # joinChannel ORG
@@ -99,7 +114,9 @@ joinChannelDoctor() {
 
 setAnchorPeer() {
   ORG=$1
-  ${CONTAINER_CLI} exec cli ./scripts/setAnchorPeer.sh $ORG $CHANNEL_NAME 
+  CLI_PEER_NUMBER=$2
+  CLI_PEER_PORT=$3
+  ${CONTAINER_CLI} exec cli ./scripts/setAnchorPeer.sh $ORG $CHANNEL_NAME $CLI_PEER_NUMBER $CLI_PEER_PORT
 }
 
 FABRIC_CFG_PATH=${PWD}/configtx
@@ -121,13 +138,13 @@ infoln "Joining patient peer${PEER_PATIENT_NUMBER}  to the channel..."
 joinChannel "patorg" ${PEER_PATIENT_NUMBER}
 
 # infoln "Joining doctor peer to the channel ..."
-# joinChannelDoctor "docorg" 0
+joinChannelDoctor "docorg" 0
 
 setGlobals0 "patorg" 
 
 ## Set the anchor peers for each org in the channel
 infoln "Setting anchor peer for patorg..."
-setAnchorPeer "patorg"
-
+setAnchorPeer "patorg" ${PEER_PATIENT_NUMBER} ${PEER_PATIENT_PORT}
+# setAnchorPeer "docorg" ${PEER_DOCTOR_NUMBER}  ${PEER_DOCTOR_PORT}
 
 successln "Channel '$CHANNEL_NAME' joined"

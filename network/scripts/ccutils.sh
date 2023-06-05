@@ -36,11 +36,20 @@ function queryInstalled() {
 function approveForMyOrg() {
   ORG=$1
   PEER=$2
-  setGlobals${PEER} $ORG
-  set -x
-  peer lifecycle chaincode approveformyorg -o localhost:7060 --ordererTLSHostnameOverride orderer.patient.com --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
-  res=$?
-  { set +x; } 2>/dev/null
+  setGlobals0 $ORG
+
+  if [ $ORG = "patorg" ]; then
+    set -x
+    peer lifecycle chaincode approveformyorg -o localhost:7060 --ordererTLSHostnameOverride orderer.patient.com --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+    res=$?
+    { set +x; } 2>/dev/null
+  elif [ $ORG = "docorg" ]; then
+    set -x
+    peer lifecycle chaincode approveformyorg -o localhost:7050 --ordererTLSHostnameOverride orderer.doctor.com --tls --cafile "$DOC_ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} --version ${CC_VERSION} --package-id ${PACKAGE_ID} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+    res=$?
+    { set +x; } 2>/dev/null
+  fi
+
   cat log.txt
   verifyResult $res "Chaincode definition approved on peer${PEER}.${ORG} on channel '$CHANNEL_NAME' failed"
   successln "Chaincode definition approved on peer${PEER}.${ORG} on channel '$CHANNEL_NAME'"
@@ -51,7 +60,7 @@ function checkCommitReadiness() {
   ORG=$1
   PEER=$2
   shift 2
-  setGlobals${PEER} $ORG
+  setGlobals0 $ORG
   infoln "Checking the commit readiness of the chaincode definition on peer${PEER}.${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1
@@ -82,17 +91,26 @@ function checkCommitReadiness() {
 function commitChaincodeDefinition() {
   PEER=$1
   shift 1
-  parsePeerConnectionParameters${PEER} $@
+  parsePeerConnectionParameters0 $@
   res=$?
   verifyResult $res "Invoke transaction failed on channel '$CHANNEL_NAME' due to uneven number of peer and org parameters "
 
   # while 'peer chaincode' command can get the orderer endpoint from the
   # peer (if join was successful), let's supply it directly as we know
   # it using the "-o" option
-  set -x
-  peer lifecycle chaincode commit -o localhost:7060 --ordererTLSHostnameOverride orderer.patient.com --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} "${PEER_CONN_PARMS[@]}" --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
-  res=$?
-  { set +x; } 2>/dev/null
+
+  if [ $ORG = "patorg" ]; then
+    set -x
+    peer lifecycle chaincode commit -o localhost:7060 --ordererTLSHostnameOverride orderer.patient.com --tls --cafile "$ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} "${PEER_CONN_PARMS[@]}" --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+    res=$?
+    { set +x; } 2>/dev/null
+  elif [ $ORG = "docorg" ]; then
+    set -x
+    peer lifecycle chaincode commit -o localhost:7050 --ordererTLSHostnameOverride orderer.doctor.com --tls --cafile "$DOC_ORDERER_CA" --channelID $CHANNEL_NAME --name ${CC_NAME} "${PEER_CONN_PARMS[@]}" --version ${CC_VERSION} --sequence ${CC_SEQUENCE} ${INIT_REQUIRED} ${CC_END_POLICY} ${CC_COLL_CONFIG} >&log.txt
+    res=$?
+    { set +x; } 2>/dev/null
+  fi
+  
   cat log.txt
   verifyResult $res "Chaincode definition commit failed on peer${PEER}.${ORG} on channel '$CHANNEL_NAME' failed"
   successln "Chaincode definition committed on channel '$CHANNEL_NAME'"

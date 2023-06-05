@@ -110,6 +110,7 @@ modifiedCLI ={
     'tty': True,
     'volumes': [
         '../organizations:/etc/hyperledger/fabric/peer/organizations',
+        '../../../DoctorNodeCreater/network/organizations:/etc/hyperledger/fabric/peer/doctorOrganization',
         '../scripts:/etc/hyperledger/fabric/peer/scripts/',
         './docker/peercfg:/etc/hyperledger/peercfg'
     ],

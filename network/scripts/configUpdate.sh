@@ -8,12 +8,20 @@ fetchChannelConfig() {
   CHANNEL=$2
   OUTPUT=$3
 
-  setGlobals $ORG
+  setGlobals0 $ORG
 
   infoln "Fetching the most recent configuration block for the channel"
-  set -x
-  peer channel fetch config config_block.pb -o orderer.patient.com:7060 --ordererTLSHostnameOverride orderer.patient.com -c $CHANNEL --tls --cafile "$ORDERER_CA"
-  { set +x; } 2>/dev/null
+  
+  if [ $ORG = "patorg" ]; then
+    set -x
+    peer channel fetch config config_block.pb -o orderer.patient.com:7060 --ordererTLSHostnameOverride orderer.patient.com -c $CHANNEL --tls --cafile "$ORDERER_CA"
+    { set +x; } 2>/dev/null
+  elif [ $ORG = "docorg" ]; then
+    setGlobalsCLI0 $ORG
+    set -x
+    peer channel fetch config config_block.pb -o orderer.doctor.com:7050 --ordererTLSHostnameOverride orderer.doctor.com -c $CHANNEL --tls --cafile "$DOC_ORDERER_CA"
+    { set +x; } 2>/dev/null
+  fi
 
   infoln "Decoding config block to JSON and isolating config to ${OUTPUT}"
   set -x

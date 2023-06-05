@@ -44,6 +44,34 @@ Organizations:
         OrdererEndpoints:
             - orderer.patient.com:7060
 
+    - &Orderer2Org
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        Name: Orderer2Org
+
+        # ID to load the MSP definition as
+        ID: Orderer2MSP
+
+        # MSPDir is the filesystem path which contains the MSP configuration
+        MSPDir: ../../../DoctorNodeCreater/network/organizations/ordererOrganizations/doctor.com/msp
+
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Orderer2MSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Ordere2rMSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Orderer2MSP.admin')"
+
+        OrdererEndpoints:
+            - orderer.doctor.com:7050
+
     - &patorg
         # DefaultOrg defines the organization which is used in the sampleconfig
         # of the fabric.git development environment
@@ -71,6 +99,32 @@ Organizations:
                 Type: Signature
                 Rule: "OR('PatOrgMSP.peer')"
 
+    - &docorg
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        Name: DocOrgMSP
+
+        # ID to load the MSP definition as
+        ID: DocOrgMSP
+
+        MSPDir: ../../../DoctorNodeCreater/network/organizations/peerOrganizations/docorg.doctor.com/msp
+
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('DocOrgMSP.admin', 'DocOrgMSP.peer', 'DocOrgMSP.client')"
+            Writers:
+                Type: Signature
+                Rule: "OR('DocOrgMSP.admin', 'DocOrgMSP.client')"
+            Admins:
+                Type: Signature
+                Rule: "OR('DocOrgMSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('DocOrgMSP.peer')"
 ################################################################################
 #
 #   SECTION: Capabilities
@@ -152,13 +206,13 @@ Application: &ApplicationDefaults
             Rule: "ANY Writers"
         Admins:
             Type: ImplicitMeta
-            Rule: "MAJORITY Admins"
+            Rule: "ANY Admins"
         LifecycleEndorsement:
             Type: ImplicitMeta
-            Rule: "MAJORITY Endorsement"
+            Rule: "ANY Endorsement"
         Endorsement:
             Type: ImplicitMeta
-            Rule: "MAJORITY Endorsement"
+            Rule: "ANY Endorsement"
 
     Capabilities:
         <<: *ApplicationCapabilities
@@ -181,6 +235,7 @@ Orderer: &OrdererDefaults
     # to include the OrdererEndpoints item in your org definition
     Addresses:
         - orderer.patient.com:7060
+        - orderer.doctor.com:7050
 
     EtcdRaft:
         Consenters:
@@ -188,6 +243,10 @@ Orderer: &OrdererDefaults
           Port: 7060
           ClientTLSCert: ../organizations/ordererOrganizations/patient.com/orderers/orderer.patient.com/tls/server.crt
           ServerTLSCert: ../organizations/ordererOrganizations/patient.com/orderers/orderer.patient.com/tls/server.crt
+        - Host: orderer.doctor.com
+          Port: 7050
+          ClientTLSCert: ../../../DoctorNodeCreater/network/organizations/ordererOrganizations/doctor.com/orderers/orderer.doctor.com/tls/server.crt
+          ServerTLSCert: ../../../DoctorNodeCreater/network/organizations/ordererOrganizations/doctor.com/orderers/orderer.doctor.com/tls/server.crt
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s
@@ -223,7 +282,7 @@ Orderer: &OrdererDefaults
             Rule: "ANY Writers"
         Admins:
             Type: ImplicitMeta
-            Rule: "MAJORITY Admins"
+            Rule: "ANY Admins"
         # BlockValidation specifies what signatures must be included in the block
         # from the orderer for the peer to validate it.
         BlockValidation:
@@ -254,7 +313,7 @@ Channel: &ChannelDefaults
         # By default, who may modify elements at this config level
         Admins:
             Type: ImplicitMeta
-            Rule: "MAJORITY Admins"
+            Rule: "ANY Admins"
 
     # Capabilities describes the channel level capabilities, see the
     # dedicated Capabilities section elsewhere in this file for a full
@@ -278,9 +337,11 @@ Profiles:
             <<: *OrdererDefaults
             Organizations:
                 - *OrdererOrg
+                - *Orderer2Org
             Capabilities: *OrdererCapabilities
         Application:
             <<: *ApplicationDefaults
             Organizations:
                 - *patorg
+                - *docorg
             Capabilities: *ApplicationCapabilities
