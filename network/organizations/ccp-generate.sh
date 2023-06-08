@@ -12,6 +12,7 @@ function json_ccp {
         -e "s/\${CAPORT}/$3/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
+        -e "s/\${PEER_PATIENT_NUMBER}/$6/" \
         organizations/ccp-template.json
 }
 
@@ -29,13 +30,16 @@ function yaml_ccp {
 echo "GENERATION started for PEER ${PEER_PATIENT_NUMBER}"
 
 ORG="patorg"
-PPORT=${PEER_PATIENT_PORT}
+PPORT=${PEER_PATIENT_PORT}  
 CAPORT=7154
 PEERPEM=organizations/peerOrganizations/patorg.patient.com/tlsca/tlsca.patorg.patient.com-cert.pem
 CAPEM=organizations/peerOrganizations/patorg.patient.com/ca/ca.patorg.patient.com-cert.pem
+PEERNUM=${PEER_PATIENT_NUMBER}
 
-
-echo "$(json_ccp $ORG $PPORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/patorg.patient.com/connection-patorg.json
-
+if [ ${PEER_PATIENT_NUMBER} == '0' ]; then
+    echo "$(json_ccp $ORG $PPORT $CAPORT $PEERPEM $CAPEM $PEERNUM)" > organizations/peerOrganizations/patorg.patient.com/connection-patorg.json
+else
+    echo "$(json_ccp $ORG $PPORT $CAPORT $PEERPEM $CAPEM $PEERNUM)" > organizations/peerOrganizations/patorg.patient.com/temp-connection-patorg.json
+fi
 
 echo "$(yaml_ccp $ORG $PPORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/patorg.patient.com/connection-patorg.yaml

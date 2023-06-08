@@ -3,6 +3,49 @@ import os
 import subprocess
 import shlex
 import yaml
+import json
+
+
+def merge_objects(obj1, obj2):
+    merged_obj = obj1.copy()
+
+    for key, value in obj2.items():
+        if key in merged_obj:
+            if isinstance(value, dict) and isinstance(merged_obj[key], dict):
+                # Recursive merge for nested objects
+                merged_obj[key] = merge_objects(merged_obj[key], value)
+            elif isinstance(value, list) and isinstance(merged_obj[key], list):
+                # Merge lists by adding all the values
+                # merged_obj[key].extend(value)
+                merged_obj[key] = list(set(merged_obj[key] + value))
+            elif value != merged_obj[key]:
+                # Fields with different values, add both values to a list
+                merged_obj[key] = [merged_obj[key], value]
+        else:
+            # New field in obj2, add it to merged_obj
+            merged_obj[key] = value
+
+    return merged_obj
+
+def merge_json_files(file1, file2, output_file):
+    # Read the contents of the first JSON file
+    with open(file1, 'r') as f1:
+        data1 = json.load(f1)
+
+    # Read the contents of the second JSON file
+    with open(file2, 'r') as f2:
+        data2 = json.load(f2)
+
+    # Merge the two JSON objects
+    merged_data = merge_objects(data1, data2)
+
+    # Write the merged data to the output file
+    with open(output_file, 'w') as outfile:
+        json.dump(merged_data, outfile, indent=4)
+
+
+
+
 
 # Loading of Yaml files
 
@@ -103,7 +146,7 @@ modifiedCLI ={
         'service': 'hyperledger-fabric'
     },
     'depends_on' :[
-        'peer0.patorg.patient.com'
+        'peer${PEER_PATIENT_NUMBER}.patorg.patient.com'
     ],
     'networks': ['test'],
     'stdin_open': True,
@@ -134,6 +177,10 @@ with open('./compose/compose-test-net-2.yaml', 'w') as file:
 subprocess.run(shlex.split('./network.sh createChannel -ca -verbose'))
 
 subprocess.run(shlex.split('./network.sh deployCC -ccn patdoccc -ccp ../Chaincode-go -ccl go -verbose'))
+
+if str(env_dict['peer_number']) != '0':
+    merge_json_files('organizations/peerOrganizations/patorg.patient.com/connection-patorg.json', 'organizations/peerOrganizations/patorg.patient.com/temp-connection-patorg.json', 'organizations/peerOrganizations/patorg.patient.com/connection-patorg.json')
+
 
 env_dict['peer_number']+=1
 env_dict['peer_port']+=2

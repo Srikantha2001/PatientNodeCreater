@@ -3,73 +3,50 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
 // Chaincode structure
-type DoctorChaincode struct {
+type PatientDataChaincode struct {
 	contractapi.Contract
 }
 
-// Doctor data structure
-type DoctorData struct {
-	DoctorID string `json:"doctorID"`
-	DoctorName string `json:"DoctorName"`
-	Specialization string `json:"Specialization"`
-	Address string `json:"Address"`
-	PhoneNumber string `json:"PhoneNumber"`
+// Patient data structure
+type PatientData struct {
+	BloodPressure string     `json:"BloodPressure"`
+	HeartRate     string    `json:"HeartRate"`
+	PatientID     string    `json:"patientID"`
+	Timestamp     time.Time `json:"ts"`
 }
 
-// Function to add doctor 
-func (d *DoctorChaincode) AddDoctor(ctx contractapi.TransactionContextInterface, doctorID string, doctorName string, specialization string, address string, phoneNumber string) error {
+// Function to add patient 
+func (p *PatientDataChaincode) StorePatientData(ctx contractapi.TransactionContextInterface, patientID string, bp string, heartrate string) error {
 
-	// Create a new doctor data object
-	doctorData := DoctorData{
-		DoctorID: doctorID,
-		DoctorName: doctorName,
-		Specialization: specialization,
-		Address: address,
-		PhoneNumber: phoneNumber,
+	// Create a new patient data object
+	patientData := PatientData{
+		PatientID:     patientID,
+		BloodPressure: bp,
+		HeartRate:     heartrate,
+		Timestamp:     time.Now(),
 	}
 
-	doctorDataJSON, err := json.Marshal(doctorData)
+	patientDataJSON, err := json.Marshal(patientData)
 	if err != nil {
-		return fmt.Errorf("failed to marshal doctor data: %v", err)
+		return fmt.Errorf("failed to marshal patient data: %v", err)
 	}
 
-	err = ctx.GetStub().PutState(doctorID, doctorDataJSON)
+	err = ctx.GetStub().PutState(patientID, patientDataJSON)
 	if err != nil {
-		return fmt.Errorf("failed to store doctor data: %v", err)
+		return fmt.Errorf("failed to store patient data: %v", err)
 	}
 
 	return nil
 }
 
-func (d *DoctorChaincode) DoctorExists(ctx contractapi.TransactionContextInterface, id string) (bool, error) {
-	assetJSON, err := ctx.GetStub().GetState(id)
-	if err != nil {
-		return false, fmt.Errorf("failed to read from world state: %v", err)
-	}
 
-	return assetJSON != nil, nil
-}
-
-// Function to delete existing doctor
-func (d *DoctorChaincode) DeleteDoctor(ctx contractapi.TransactionContextInterface,id string) error {
-	exists, err := d.DoctorExists(ctx, id)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("the asset %s does not exist", id)
-	}
-
-	return ctx.GetStub().DelState(id)
-}
-
-
-func (d *DoctorChaincode) GetAllCurrentDoctors(ctx contractapi.TransactionContextInterface) ([]*DoctorData, error) {
+func (d *PatientDataChaincode) GetPatientsData(ctx contractapi.TransactionContextInterface) ([]*PatientData, error) {
 	// range query with empty string for startKey and endKey does an
 	// open-ended query of all assets in the chaincode namespace.
 	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
@@ -78,36 +55,36 @@ func (d *DoctorChaincode) GetAllCurrentDoctors(ctx contractapi.TransactionContex
 	}
 	defer resultsIterator.Close()
 
-	var doctorsList []*DoctorData
+	var patientsList []*PatientData
 	for resultsIterator.HasNext() {
 		queryResponse, err := resultsIterator.Next()
 		if err != nil {
 			return nil, err
 		}
 
-		var currentDoctor DoctorData
-		err = json.Unmarshal(queryResponse.Value, &currentDoctor)
+		var currentPatient PatientData
+		err = json.Unmarshal(queryResponse.Value, &currentPatient)
 		if err != nil {
 			return nil, err
 		}
-		doctorsList = append(doctorsList, &currentDoctor)
+		patientsList = append(patientsList, &currentPatient)
 	}
 
-	return doctorsList, nil
+	return patientsList, nil
 }
 
 // Main function
 func main() {
 
 	// Create a new chaincode object
-	chaincode, err := contractapi.NewChaincode(&DoctorChaincode{})
+	chaincode, err := contractapi.NewChaincode(&PatientDataChaincode{})
 	if err != nil {
-		fmt.Printf("Error creating Doctor data chaincode: %s", err.Error())
+		fmt.Printf("Error creating patient data chaincode: %s", err.Error())
 		return
 	}
 
 	// Start the chaincode
 	if err := chaincode.Start(); err != nil {
-		fmt.Printf("Error starting doctor data chaincode: %s", err.Error())
+		fmt.Printf("Error starting patient data chaincode: %s", err.Error())
 	}
 }

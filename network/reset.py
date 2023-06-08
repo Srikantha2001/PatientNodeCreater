@@ -24,4 +24,4 @@ new_df.to_csv('variable.csv')
 
 
 subprocess.run(shlex.split('./network.sh down'))
-subprocess.run(shlex.split('docker volume rm $(docker volume ls -q)'))
+subprocess.run('docker volume rm $(docker volume ls -q)',shell=True)

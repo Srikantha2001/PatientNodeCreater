@@ -120,7 +120,7 @@ function commitChaincodeDefinition() {
 function queryCommitted() {
   ORG=$1
   PEER=$2
-  setGlobals${PEER} $ORG
+  setGlobals0 $ORG
   EXPECTED_RESULT="Version: ${CC_VERSION}, Sequence: ${CC_SEQUENCE}, Endorsement Plugin: escc, Validation Plugin: vscc"
   infoln "Querying chaincode definition on peer${PEER}.${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
@@ -170,7 +170,7 @@ function chaincodeInvokeInit() {
 function chaincodeQuery() {
   ORG=$1
   PEER=$2
-  setGlobals${PEER} $ORG
+  setGlobals0 $ORG
   infoln "Querying on peer${PEER}.${ORG} on channel '$CHANNEL_NAME'..."
   local rc=1
   local COUNTER=1
